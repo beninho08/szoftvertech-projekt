@@ -1,0 +1,162 @@
+# 📘 H3 – Specifikációs fázis (SRS + dokumentáció)
+*Projekt:* Magasság-alapú színházi jegyfoglaló rendszer (FastAPI)  
+*Csapat:* "dájnamik DUO" – Matyi Bernát, Bodnár Dániel  
+*Dátum:* 2025. október
+
+---
+
+## 1. Áttekintés
+A H3 fázis célja a rendszer *részletes követelményeinek* meghatározása implementáció előtt.  
+Ez a dokumentum tartalmazza:  
+✔ *SRS (követelményspecifikáció)*  
+✔ *Bővített szótár*  
+✔ *Felhasználói dokumentáció – első verzió*  
+✔ *Munkanapló induló bejegyzésekkel*
+
+---
+
+## 2. Szoftverkövetelmény-specifikáció (SRS)
+
+### 2.1 Bevezetés
+*Cél:* Ez a dokumentum meghatározza a Magasság-alapú színházi jegyfoglaló rendszer követelményeit.  
+*Hatókör:* A rendszer egy *FastAPI alapú* backend, amely *csak akkor enged foglalást*, ha az adott ülés *előtti sorok már foglalt helyein az ott ülő nézők magassága nem akadályozná a rálátást*. A rendszer *Swagger UI felületen tesztelhető*.
+
+---
+
+### 2.2 Általános leírás
+
+| Tétel | Leírás |
+|---|---|
+| *Aktorok* | Jegyvásárló (néző), Admin, Rendszer (API) |
+| *Környezet* | Python 3.11+, FastAPI, Swagger UI, böngésző |
+| *Fő funkciók* | Üléslista, foglalás magasság alapján, visszajelzés |
+| *Felület* | REST API | 
+| *Korlátok* | Kezdő verzióban csak 1 teremmodell, nincs hitelesítés |
+| *Feltételezések* | A felhasználó valós magasságot ad meg és egyértelmű üléskoordinátát |
+
+---
+
+### 2.3 Funkcionális követelmények (FR)
+
+| ID | Funkció | Leírás | Bemenet | Kimenet | Előfeltétel | Utófeltétel |
+|---|---|---|---|---|---|---|
+| *FR-01* | Üléslista | Szabad/foglalt helyek lekérése | – | JSON lista | Teremmodell betöltve | – |
+| *FR-02* | Foglalás kezdeményezése | Felhasználó megadja sor, oszlop, magasság | sor, oszlop, magasság_cm | 201 vagy 409 | Ülés létezik | Foglalás rögzül vagy elutasítva |
+| *FR-03* | Magasságlogika ellenőrzése | Ellenőrzi, hogy előtte ül-e magasabb | sor, oszlop, magasság_cm | true/false + indok | – | Foglalás elutasít vagy enged |
+| *FR-04* | Foglalás törlése | Felhasználó/admin törli saját foglalását | id | 204 / 404 | Foglalás létezik | Ülés felszabadul |
+| *FR-05* | Hibakezelés | Egységes API hibaformátum | – | JSON error objektum | – | – |
+
+---
+
+### 2.4 Use Case táblázat
+
+| Use Case | Aktor | Cél | Fő folyamat | Alternatív / Hibaág |
+|---|---|---|---|---|
+| *UC-01*: Ülések megtekintése | Jegyvásárló | Információ a foglaltságról | GET /seats → lista | – |
+| *UC-02*: Foglalás magassággal | Jegyvásárló | Foglalás indítása | POST /reserve → magasság-ellenőrzés → 201 | → *409*, ha előtte magasabb ülő van |
+| *UC-03*: Foglalás törlése | Jegyvásárló/Admin | Foglalás eltávolítása | DELETE /reserve/{id} → 204 | → *404*, ha nincs ilyen foglalás |
+| *UC-04*: Ülésrács karbantartás | Admin | Terem betöltése | Ülésadatok publikálása | → Hibás formátum → 400 |
+
+---
+
+### 2.5 Nem funkcionális követelmények (NFR)
+
+| Kategória | Elvárás |
+|---|---|
+| *Teljesítmény* | Átlagos válaszidő <150 ms Swagger alatt |
+| *Megbízhatóság* | Hibás input → stabil hibaüzenet (422, 409, 404) |
+| *Használhatóság* | Swagger UI-ból minden funkció kipróbálható |
+| *Tesztelhetőség* | Magasságlogika külön pytest egységtesztben lefedve |
+| *Olvashatóság* | Moduláris felépítés – külön route, logika, storage |
+| *Kódminőség* | ruff, black betartása kötelező |
+| *Biztonság* | H3-ban *nincs auth*, csak inputvalidáció |
+
+---
+
+### 2.6 Korlátok és függőségek
+
+| Típus | Leírás |
+|---|---|
+| Hardver | Lokális fejlesztői gép elegendő |
+| Szoftver | Python 3.11+, Uvicorn könyvtár szükséges |
+| Külső függőség | Swagger rendereléshez modern böngésző |
+| Funkcionális korlát | Egy terem modell, nincs felhasználónév/jelszó rendszer |
+
+---
+
+### 2.7 Feltételezések és jövőbeli fejlesztések
+
+| Típus | Leírás |
+|---|---|
+| *Feltételezés* | A nézők valós magasságot adnak meg |
+| *Feltételezés* | A terem helyadatai strukturáltan fel vannak töltve |
+| *Jövőbeli funkció* | Több terem, magaslatmodell (lejtés), AI helyajánló |
+| *Jövőbeli funkció* | Hitelesített profilok, jegykód generálás, QR check-in |
+
+---
+
+### 2.8 Hivatkozások
+
+- FastAPI dokumentáció – https://fastapi.tiangolo.com  
+- Swagger UI – https://swagger.io/tools/swagger-ui/  
+- pytest – https://docs.pytest.org  
+- GitHub Actions – CI dokumentáció
+
+---
+
+## 3. Szótár (bővített)
+
+| Fogalom | Definíció |
+|---|---|
+| *Sor / Oszlop* | A nézőtér rácsalapú azonosítása (pl. 5. sor, 7. szék) |
+| *Magasság_cm* | A foglaló által megadott tényleges testmagasság cm-ben |
+| *Foglalás* | Egy ülőhely + magasság hozzárendelése időbélyeggel |
+| *409 Conflict* | Hibakód: a foglalás *nem engedélyezhető magassági konfliktus miatt* |
+| *Ülésrács* | A rendszerben tárolt teljes ülésállapot mátrix |
+| *Swagger UI* | Grafikus API tesztfelület, automatikusan generálva FastAPI-ból |
+
+---
+
+## 4. Felhasználói dokumentáció – első verzió
+
+### 4.1 Áttekintés
+A rendszer lehetővé teszi, hogy a felhasználó *magasságának megadásával* foglaljon ülőhelyet, ezzel *minimalizálva a takarásból adódó élményromlást*.
+
+### 4.2 Telepítés / elérés
+
+# fejlesztői futtatás
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e .[dev]
+python -m app.main  # Swagger: http://localhost:8000/docs
+
+### 4.3 Használati útmutató (Swaggeren keresztül)
+
+| Lépés | Művelet |
+|---|---|
+| 1 | Nyisd meg a Swagger UI-t: /docs |
+| 2 | Futtasd a GET /seats végpontot – ellenőrizd az ülésállapotot |
+| 3 | Használj POST /reserve → add meg: sor, oszlop, magassag_cm |
+| 4 | Siker → válasz 201 Created, foglalás rögzül |
+| 5 | Magasabb ülő miatt elutasítás → válasz 409 Conflict + üzenet |
+| 6 | Foglalás törlése → DELETE /reserve/{id} |
+
+### 4.4 Hibaelhárítás
+
+| Probléma | Ok | Megoldás |
+|---|---|---|
+| *409 Conflict* | Előtted magasabb foglalás van | Válassz másik sort vagy hátrébb ülést |
+| *404 Not Found* | Foglalás ID nem létezik | Kérd le újra az üléslistát |
+| *422 Unprocessable Entity* | Input hibás (nem létező sor/oszlop) | Ellenőrizd az értékeket Swaggerben |
+
+---
+
+## 5. Munkanapló (H3 induló verzió)
+
+| Dátum | Tag | Feladat | Óra |
+|---|---|---|---|
+| 2025-10-12 | MB | SRS váz kitöltése | 2 |
+| 2025-10-13| BD | Use Case + funkciótáblák | 2 |
+| 2025-10-16 | MB | Felhasználói doksi + hibakezelés szekció | 1.5 |
+
+---
