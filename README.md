@@ -19,7 +19,7 @@
 
 | Mérföldkő | Leszállítandó | Határidő |
 |----------|--------------|----------|
-| *H1* | Projektterv (README formában) | ✅ *1. hét* |
+| *H1* | Projektterv | ✅ *1. hét* |
 | *H2* | Vízió dokumentum + frissített terv + munkanapló indítása | *3. hét* |
 | *H3* | SRS, Fogalomtár, Felhasználói kézikönyv v1 | *6. hét* |
 | *H4* | Analízis modell + rendszertervezési dokumentum (UML / architektúra) | *9. hét* |
